@@ -13,5 +13,5 @@ public class ProcessManagerTest {
         assertNotNull(processManager.listProcesses());
     }
 
-    // Добавьте другие тесты для методов kill и start
+    // другие тесты для методов kill и start
 }
