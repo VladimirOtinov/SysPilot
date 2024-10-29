@@ -51,7 +51,7 @@ SysPilot/
 
 1. Клонируйте репозиторий и переключитесь на ветку `master`:
    ```bash
-   git clone -b master https://github.com/username/SysPilot.git
+   git clone -b master https://github.com/VladimirOtinov/SysPilot.git
    cd SysPilot
    ```
 
