@@ -6,74 +6,53 @@ import java.io.InputStreamReader;
 
 public class ProcessUtils {
 
-    // Метод для получения информации о процессах
-    public static String getProcessInfo(int pid) {
-        StringBuilder info = new StringBuilder();
-        try {
-            Process process = Runtime.getRuntime().exec("ps -p " + pid + " -o pid,comm,%cpu,%mem");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                info.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Ошибка получения информации о процессе.";
-        }
-        return info.toString();
-    }
-
-    // Метод для проверки, запущен ли процесс по PID
-    public static boolean isProcessRunning(int pid) {
-        try {
-            Process process = Runtime.getRuntime().exec("ps -p " + pid);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            line = reader.readLine(); // Пропускаем заголовок
-            line = reader.readLine(); // Считываем строку с информацией о процессе
-            return line != null && line.contains(String.valueOf(pid));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Метод для получения списка всех процессов в виде строки
+    // Возвращает список всех процессов
     public static String listAllProcesses() {
-        StringBuilder processList = new StringBuilder();
-        try {
-            Process process = Runtime.getRuntime().exec("ps -e");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                processList.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Ошибка получения списка процессов.";
-        }
-        return processList.toString();
+        return executeCommand("ps -e");
     }
 
-    // Метод для запуска процесса с указанием команды
+    // Проверяет, работает ли процесс с данным PID
+    public static boolean isProcessRunning(int pid) {
+        String result = executeCommand("ps -p " + pid);
+        return result.contains(String.valueOf(pid));
+    }
+
+    // Завершает процесс по PID
+    public static boolean terminateProcess(int pid) {
+        String result = executeCommand("kill " + pid);
+        return result.isEmpty(); // Пустой результат означает успешное завершение
+    }
+
+    // Запускает процесс по команде
     public static boolean startProcess(String command) {
         try {
-            Process process = Runtime.getRuntime().exec(command);
+            Process process = new ProcessBuilder(command.split(" ")).start();
             return process.isAlive();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Ошибка при запуске процесса: " + e.getMessage());
             return false;
         }
     }
 
-    // Метод для завершения процесса по PID
-    public static boolean terminateProcess(int pid) {
+    // Получает информацию о процессе по PID
+    public static String getProcessInfo(int pid) {
+        return executeCommand("ps -p " + pid + " -o pid,ppid,user,etime,%mem,%cpu,cmd");
+    }
+
+    // Вспомогательный метод для выполнения команды и получения результата
+    private static String executeCommand(String command) {
+        StringBuilder output = new StringBuilder();
         try {
-            Process process = Runtime.getRuntime().exec("kill " + pid);
-            return process.waitFor() == 0;
+            Process process = Runtime.getRuntime().exec(command);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return false;
+            System.err.println("Ошибка при выполнении команды: " + e.getMessage());
         }
+        return output.toString().trim();
     }
 }

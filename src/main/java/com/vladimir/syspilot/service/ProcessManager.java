@@ -1,66 +1,56 @@
 package com.vladimir.syspilot.service;
 
 import com.vladimir.syspilot.model.ProcessInfo;
+import com.vladimir.syspilot.util.ProcessUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ProcessManager {
+
     public List<ProcessInfo> listProcesses() {
         List<ProcessInfo> processes = new ArrayList<>();
-        try {
-            Process process = Runtime.getRuntime().exec("ps -e");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
+        String allProcessesInfo = ProcessUtils.listAllProcesses();
+        String[] lines = allProcessesInfo.split("\n");
 
-            // Пропускаем первую строку с заголовками
-            reader.readLine();
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.trim().split("\\s+", 4);
-                if (parts.length >= 3) {
-                    try {
-                        int pid = Integer.parseInt(parts[0]);
-                        String name = parts[3];
-                        String status = "Running";
-                        processes.add(new ProcessInfo(pid, name, status));
-                    } catch (NumberFormatException e) {
-                        // Логирование ошибки, если формат PID некорректен
-                        System.err.println("Ошибка преобразования PID: " + parts[0]);
-                    }
+        for (int i = 1; i < lines.length; i++) {
+            String[] parts = lines[i].trim().split("\\s+", 4);
+            if (parts.length >= 3) {
+                try {
+                    int pid = Integer.parseInt(parts[0]);
+                    String name = parts[3];
+                    String status = ProcessUtils.isProcessRunning(pid) ? "Running" : "Not Running";
+                    processes.add(new ProcessInfo(pid, name, status));
+                } catch (NumberFormatException e) {
+                    System.err.println("Ошибка преобразования PID: " + parts[0]);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return processes;
     }
 
-
-    public void killProcess(int pid) {
-        try {
-            Runtime.getRuntime().exec("kill " + pid);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public boolean killProcess(int pid) {
+        return ProcessUtils.terminateProcess(pid);
     }
 
-    public void startProcess(String command) {
-        try {
-            Runtime.getRuntime().exec(command);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public boolean startProcess(String command) {
+        return ProcessUtils.startProcess(command);
     }
 
     public List<ProcessInfo> findProcessesByName(String name) {
         List<ProcessInfo> allProcesses = listProcesses();
-        return allProcesses.stream()
-                .filter(process -> process.getName().toLowerCase().contains(name.toLowerCase()))
-                .collect(Collectors.toList());
+        List<ProcessInfo> matchedProcesses = new ArrayList<>();
+
+        for (ProcessInfo process : allProcesses) {
+            if (process.getName().toLowerCase().contains(name.toLowerCase())) {
+                matchedProcesses.add(process);
+            }
+        }
+
+        return matchedProcesses;
+    }
+
+    public String getProcessDetails(int pid) {
+        return ProcessUtils.getProcessInfo(pid);
     }
 }
