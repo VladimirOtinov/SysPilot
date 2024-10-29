@@ -16,13 +16,22 @@ public class ProcessManager {
             Process process = Runtime.getRuntime().exec("ps -e");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
+
+            // Пропускаем первую строку с заголовками
+            reader.readLine();
+
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.trim().split("\\s+", 4);
                 if (parts.length >= 3) {
-                    int pid = Integer.parseInt(parts[0]);
-                    String name = parts[3];
-                    String status = "Running";
-                    processes.add(new ProcessInfo(pid, name, status));
+                    try {
+                        int pid = Integer.parseInt(parts[0]);
+                        String name = parts[3];
+                        String status = "Running";
+                        processes.add(new ProcessInfo(pid, name, status));
+                    } catch (NumberFormatException e) {
+                        // Логирование ошибки, если формат PID некорректен
+                        System.err.println("Ошибка преобразования PID: " + parts[0]);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -30,6 +39,7 @@ public class ProcessManager {
         }
         return processes;
     }
+
 
     public void killProcess(int pid) {
         try {
