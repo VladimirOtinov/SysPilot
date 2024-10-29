@@ -2,76 +2,70 @@ package com.vladimir.syspilot.ui;
 
 import com.vladimir.syspilot.model.ProcessInfo;
 import com.vladimir.syspilot.service.ProcessManager;
+import com.vladimir.syspilot.util.ProcessUtils;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class CommandLineUI {
+
     private final ProcessManager processManager;
-    private final Scanner scanner;
 
     public CommandLineUI(ProcessManager processManager) {
         this.processManager = processManager;
-        this.scanner = new Scanner(System.in);
     }
 
     public void start() {
+        Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.println("Выберите действие:");
-            System.out.println("1. Показать список процессов");
-            System.out.println("2. Завершить процесс по PID");
-            System.out.println("3. Запустить новый процесс");
-            System.out.println("4. Найти процессы по имени");
-            System.out.println("5. Показать детали процесса по PID");
-            System.out.println("6. Выйти");
-
-            int choice = Integer.parseInt(scanner.nextLine());
+            System.out.println("\n1. Список процессов\n2. Завершить процесс\n3. Запустить процесс\n4. Выйти");
+            System.out.print("Выберите действие: ");
+            String choice = scanner.nextLine();
 
             switch (choice) {
-                case 1 -> listProcesses();
-                case 2 -> terminateProcess();
-                case 3 -> startProcess();
-                case 4 -> findProcessesByName();
-                case 5 -> getProcessDetails();
-                case 6 -> {
+                case "1":
+                    listProcesses();
+                    break;
+                case "2":
+                    terminateProcess(scanner);
+                    break;
+                case "3":
+                    startProcess(scanner);
+                    break;
+                case "4":
                     System.out.println("Выход...");
                     return;
-                }
-                default -> System.out.println("Неверный выбор. Попробуйте еще раз.");
+                default:
+                    System.out.println("Неверный выбор. Попробуйте снова.");
             }
         }
     }
 
     private void listProcesses() {
         List<ProcessInfo> processes = processManager.listProcesses();
-        processes.forEach(System.out::println);
+        System.out.printf("%-30s%-10s%-15s\n", "Имя", "PID", "Используемая память (KB)");
+        for (ProcessInfo process : processes) {
+            System.out.printf("%-30s%-10d%-15d\n", process.getName(), process.getPid(), process.getMemoryUsage() / 1024);
+        }
     }
 
-    private void terminateProcess() {
-        System.out.print("Введите PID для завершения: ");
+    private void terminateProcess(Scanner scanner) {
+        System.out.print("Введите PID процесса для завершения: ");
         int pid = Integer.parseInt(scanner.nextLine());
-        boolean success = processManager.killProcess(pid);
-        System.out.println(success ? "Процесс завершен." : "Не удалось завершить процесс.");
+        if (processManager.terminateProcess(pid)) {
+            System.out.println("Процесс завершен.");
+        } else {
+            System.out.println("Не удалось завершить процесс.");
+        }
     }
 
-    private void startProcess() {
+    private void startProcess(Scanner scanner) {
         System.out.print("Введите команду для запуска процесса: ");
         String command = scanner.nextLine();
-        boolean success = processManager.startProcess(command);
-        System.out.println(success ? "Процесс запущен." : "Не удалось запустить процесс.");
-    }
-
-    private void findProcessesByName() {
-        System.out.print("Введите имя процесса для поиска: ");
-        String name = scanner.nextLine();
-        List<ProcessInfo> processes = processManager.findProcessesByName(name);
-        processes.forEach(System.out::println);
-    }
-
-    private void getProcessDetails() {
-        System.out.print("Введите PID для получения деталей: ");
-        int pid = Integer.parseInt(scanner.nextLine());
-        String details = processManager.getProcessDetails(pid);
-        System.out.println("Детали процесса:\n" + details);
+        if (ProcessUtils.startProcess(command)) {
+            System.out.println("Процесс запущен.");
+        } else {
+            System.out.println("Не удалось запустить процесс.");
+        }
     }
 }

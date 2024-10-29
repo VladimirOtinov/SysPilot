@@ -1,31 +1,17 @@
 package com.vladimir.syspilot.model;
 
 public class ProcessInfo {
-    private int pid;
     private String name;
-    private String status;
+    private int pid;
+    private long memoryUsage;
 
-    public ProcessInfo(int pid, String name, String status) {
-        this.pid = pid;
+    public ProcessInfo(String name, int pid, long memoryUsage) {
         this.name = name;
-        this.status = status;
+        this.pid = pid;
+        this.memoryUsage = memoryUsage;
     }
 
-    // Геттеры
-    public int getPid() {
-        return pid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    @Override
-    public String toString() {
-        return "PID: " + pid + ", Name: " + name + ", Status: " + status;
-    }
+    public String getName() { return name; }
+    public int getPid() { return pid; }
+    public long getMemoryUsage() { return memoryUsage; }
 }

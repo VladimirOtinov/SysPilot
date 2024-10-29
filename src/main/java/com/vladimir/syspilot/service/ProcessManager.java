@@ -2,7 +2,8 @@ package com.vladimir.syspilot.service;
 
 import com.vladimir.syspilot.model.ProcessInfo;
 import com.vladimir.syspilot.util.ProcessUtils;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,47 +11,42 @@ public class ProcessManager {
 
     public List<ProcessInfo> listProcesses() {
         List<ProcessInfo> processes = new ArrayList<>();
-        String allProcessesInfo = ProcessUtils.listAllProcesses();
-        String[] lines = allProcessesInfo.split("\n");
+        String command = "tasklist /fo csv /nh";
 
-        for (int i = 1; i < lines.length; i++) {
-            String[] parts = lines[i].trim().split("\\s+", 4);
-            if (parts.length >= 3) {
-                try {
-                    int pid = Integer.parseInt(parts[0]);
-                    String name = parts[3];
-                    String status = ProcessUtils.isProcessRunning(pid) ? "Running" : "Not Running";
-                    processes.add(new ProcessInfo(pid, name, status));
-                } catch (NumberFormatException e) {
-                    System.err.println("Ошибка преобразования PID: " + parts[0]);
-                }
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\",\"");
+
+                // Получаем имя и PID процесса, очищая от лишних кавычек
+                String name = parts[0].replace("\"", "");
+                int pid = Integer.parseInt(parts[1].replace("\"", ""));
+
+                // Убираем все нецифровые символы перед преобразованием в число
+                String memoryUsageStr = parts[4].replaceAll("[^\\d]", "");
+                long memoryUsage = Long.parseLong(memoryUsageStr) * 1024;
+
+                processes.add(new ProcessInfo(name, pid, memoryUsage));
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
         return processes;
     }
 
-    public boolean killProcess(int pid) {
-        return ProcessUtils.terminateProcess(pid);
-    }
-
-    public boolean startProcess(String command) {
-        return ProcessUtils.startProcess(command);
-    }
-
-    public List<ProcessInfo> findProcessesByName(String name) {
-        List<ProcessInfo> allProcesses = listProcesses();
-        List<ProcessInfo> matchedProcesses = new ArrayList<>();
-
-        for (ProcessInfo process : allProcesses) {
-            if (process.getName().toLowerCase().contains(name.toLowerCase())) {
-                matchedProcesses.add(process);
-            }
+    public boolean terminateProcess(int pid) {
+        String command = "taskkill /F /PID " + pid;
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+            process.waitFor();
+            return process.exitValue() == 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-
-        return matchedProcesses;
-    }
-
-    public String getProcessDetails(int pid) {
-        return ProcessUtils.getProcessInfo(pid);
     }
 }
