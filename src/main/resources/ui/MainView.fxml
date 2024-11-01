@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.vladimir.syspilot.ui.controller.MainController">
+    <top>
+        <ToolBar>
+            <Button text="List Processes" onAction="#onListProcesses"/>
+            <Button text="Kill Process" onAction="#onKillProcess"/>
+            <Button text="Start Process" onAction="#onStartProcess"/>
+            <Button text="Process Info" onAction="#onProcessInfo"/>
+        </ToolBar>
+    </top>
+    <center>
+        <TableView fx:id="processTableView">
+            <columns>
+                <TableColumn text="PID" fx:id="pidColumn"/>
+                <TableColumn text="Name" fx:id="nameColumn"/>
+                <TableColumn text="Status" fx:id="statusColumn"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

@@ -1,15 +1,21 @@
 package com.vladimir.syspilot;
 
-import com.vladimir.syspilot.service.ProcessManager;
-import com.vladimir.syspilot.ui.CommandLineUI;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class SysPilotApplication {
+public class SysPilotApplication extends Application {
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/MainView.fxml"));
+        Scene scene = new Scene(loader.load());
+        primaryStage.setTitle("SysPilot - Process Manager");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
 
     public static void main(String[] args) {
-        ProcessManager processManager = new ProcessManager();
-        CommandLineUI ui = new CommandLineUI(processManager);
-
-        System.out.println("Добро пожаловать в SysPilot - систему управления процессами!");
-        ui.start();
+        launch(args);
     }
 }
