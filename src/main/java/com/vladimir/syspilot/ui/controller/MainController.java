@@ -2,65 +2,53 @@ package com.vladimir.syspilot.ui.controller;
 
 import com.vladimir.syspilot.model.ProcessInfo;
 import com.vladimir.syspilot.service.ProcessManager;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.event.ActionEvent;
 
 public class MainController {
-    @FXML private TableView<ProcessInfo> processTableView;
-    @FXML private TableColumn<ProcessInfo, Integer> pidColumn;
-    @FXML private TableColumn<ProcessInfo, String> nameColumn;
-    @FXML private TableColumn<ProcessInfo, String> statusColumn;
 
-    private final ProcessManager processManager = new ProcessManager();
+    @FXML
+    private TableView<ProcessInfo> processTable;
+    @FXML
+    private TableColumn<ProcessInfo, String> nameColumn;
+    @FXML
+    private TableColumn<ProcessInfo, Integer> pidColumn;
+    @FXML
+    private TableColumn<ProcessInfo, Long> cpuUsageColumn;
+    @FXML
+    private TableColumn<ProcessInfo, Long> memoryUsageColumn;
+    @FXML
+    private TableColumn<ProcessInfo, Long> diskUsageColumn;
+    @FXML
+    private Button startProcessButton;
+
+    private ProcessManager processManager = new ProcessManager();
 
     @FXML
     public void initialize() {
-        pidColumn.setCellValueFactory(data -> data.getValue().pidProperty().asObject());
-        nameColumn.setCellValueFactory(data -> data.getValue().nameProperty());
-        statusColumn.setCellValueFactory(data -> data.getValue().statusProperty());
-        loadProcessList();
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        pidColumn.setCellValueFactory(new PropertyValueFactory<>("pid"));
+        cpuUsageColumn.setCellValueFactory(new PropertyValueFactory<>("cpuUsage"));
+        memoryUsageColumn.setCellValueFactory(new PropertyValueFactory<>("memoryUsage"));
+        diskUsageColumn.setCellValueFactory(new PropertyValueFactory<>("diskUsage"));
+
+        updateProcessTable();
     }
 
-    public void onListProcesses() {
-        loadProcessList();
+    private void updateProcessTable() {
+        processTable.getItems().setAll(processManager.listProcesses());
     }
 
-    public void onKillProcess() {
-        ProcessInfo selectedProcess = processTableView.getSelectionModel().getSelectedItem();
+    @FXML
+    private void handleStartProcess(ActionEvent event) {
+        ProcessInfo selectedProcess = processTable.getSelectionModel().getSelectedItem();
         if (selectedProcess != null) {
-            processManager.killProcess(selectedProcess.getPid());
-            loadProcessList();
-        } else {
-            showAlert("No process selected", "Please select a process to kill.");
+            processManager.startProcess(selectedProcess.getName());
+            updateProcessTable();  // обновить таблицу после запуска
         }
-    }
-
-    public void onStartProcess() {
-        // Открытие нового окна для ввода команды запуска процесса
-    }
-
-    public void onProcessInfo() {
-        ProcessInfo selectedProcess = processTableView.getSelectionModel().getSelectedItem();
-        if (selectedProcess != null) {
-            // Вывод дополнительной информации о процессе
-        } else {
-            showAlert("No process selected", "Please select a process to view details.");
-        }
-    }
-
-    private void loadProcessList() {
-        ObservableList<ProcessInfo> processList = FXCollections.observableArrayList(processManager.listProcesses());
-        processTableView.setItems(processList);
-    }
-
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
-        alert.setTitle(title);
-        alert.showAndWait();
     }
 }

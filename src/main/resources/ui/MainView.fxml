@@ -3,21 +3,20 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.vladimir.syspilot.ui.controller.MainController">
-    <top>
-        <ToolBar>
-            <Button text="List Processes" onAction="#onListProcesses"/>
-            <Button text="Kill Process" onAction="#onKillProcess"/>
-            <Button text="Start Process" onAction="#onStartProcess"/>
-            <Button text="Process Info" onAction="#onProcessInfo"/>
-        </ToolBar>
-    </top>
     <center>
-        <TableView fx:id="processTableView">
+        <TableView fx:id="processTable">
             <columns>
-                <TableColumn text="PID" fx:id="pidColumn"/>
-                <TableColumn text="Name" fx:id="nameColumn"/>
-                <TableColumn text="Status" fx:id="statusColumn"/>
+                <TableColumn fx:id="nameColumn" text="Process Name"/>
+                <TableColumn fx:id="pidColumn" text="PID"/>
+                <TableColumn fx:id="cpuUsageColumn" text="CPU Usage (ms)"/>
+                <TableColumn fx:id="memoryUsageColumn" text="Memory Usage (MB)"/>
+                <TableColumn fx:id="diskUsageColumn" text="Disk Usage (KB)"/>
             </columns>
         </TableView>
     </center>
+    <bottom>
+        <HBox spacing="10">
+            <Button fx:id="startProcessButton" text="Start Process"/>
+        </HBox>
+    </bottom>
 </BorderPane>
